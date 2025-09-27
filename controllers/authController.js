@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { User } = require("../models");
 const { sendEmail } = require("../utils/email");
-const { sendSMS } = require("../utils/sms");
+// const { sendSMS } = require("../utils/sms");
 const { validateRegistration, validateLogin } = require("../utils/validation");
 
 class AuthController {
@@ -52,9 +52,9 @@ class AuthController {
       if (email) {
         await AuthController.sendEmailVerification(user);
       }
-      if (mobile) {
-        await AuthController.sendMobileVerification(user);
-      }
+      // if (mobile) {
+      //   await AuthController.sendMobileVerification(user);
+      // }
 
       // Generate JWT
       const token = AuthController.generateAccessToken(user.id);
@@ -277,7 +277,7 @@ class AuthController {
         });
       }
 
-      await AuthController.sendMobileVerification(user);
+      // await AuthController.sendMobileVerification(user);
 
       res.json({
         success: true,
@@ -337,10 +337,10 @@ class AuthController {
           mobileVerificationExpires: resetExpires,
         });
 
-        await sendSMS(
-          user.mobile,
-          `Your password reset OTP is: ${otp}. Valid for 10 minutes.`
-        );
+        // await sendSMS(
+        //   user.mobile,
+        //   `Your password reset OTP is: ${otp}. Valid for 10 minutes.`
+        // );
       }
 
       res.json({
@@ -509,20 +509,20 @@ class AuthController {
     });
   }
 
-  static async sendMobileVerification(user) {
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  // static async sendMobileVerification(user) {
+  //   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  //   const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    await user.update({
-      mobileVerificationCode: otp,
-      mobileVerificationExpires: expires,
-    });
+  //   await user.update({
+  //     mobileVerificationCode: otp,
+  //     mobileVerificationExpires: expires,
+  //   });
 
-    await sendSMS(
-      user.mobile,
-      `Your verification OTP is: ${otp}. Valid for 10 minutes.`
-    );
-  }
+  //   await sendSMS(
+  //     user.mobile,
+  //     `Your verification OTP is: ${otp}. Valid for 10 minutes.`
+  //   );
+  // }
 }
 
 module.exports = AuthController;

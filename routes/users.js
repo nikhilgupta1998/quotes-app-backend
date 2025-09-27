@@ -23,4 +23,9 @@ router.get('/:username/following', optionalAuth, UserController.getFollowing);
 // Follow requests (for private accounts)
 router.get('/follow-requests', authenticate, UserController.getFollowRequests);
 router.put('/follow-requests/:requestId/accept', authenticate, UserController.acceptFollowRequest);
-router.delete('/follow-requests/:requestId/reject', authenticate, UserController.
+router.delete('/follow-requests/:requestId/reject', authenticate, UserController.rejectFollowRequest);
+
+// Deactivate account
+router.put('/deactive-account', authenticate, UserController.deactivateAccount);
+
+module.exports = router;
