@@ -101,6 +101,10 @@ app.use((req, res, next) => {
 // Rate limiting middleware
 app.use("/api", generalLimiter);
 
+app.get("/", (req, res) => {
+  res.status(200).send("Hello from the server!");
+});
+
 // Health check endpoint (before rate limiting)
 app.get("/health", (req, res) => {
   res.json({
