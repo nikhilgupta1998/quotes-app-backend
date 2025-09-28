@@ -39,8 +39,7 @@
     "redis": "^5.8.2",
     "sequelize": "^6.37.7",
     "socket.io": "^4.8.1",
-    "twilio": "^5.10.0",
-    "sequelize-cli": "^6.6.3"
+    "twilio": "^5.10.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
