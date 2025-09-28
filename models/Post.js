@@ -80,6 +80,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      tableName: "posts",
       indexes: [
         { fields: ["userId"] },
         { fields: ["createdAt"] },

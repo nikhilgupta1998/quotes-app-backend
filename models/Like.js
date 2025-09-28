@@ -1,4 +1,3 @@
-// models/Like.js
 module.exports = (sequelize, DataTypes) => {
   const Like = sequelize.define(
     "Like",
@@ -26,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      tableName: "likes",
       indexes: [
         { unique: true, fields: ["userId", "postId"] },
         { fields: ["postId"] },

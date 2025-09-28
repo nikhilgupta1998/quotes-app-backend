@@ -1,16 +1,18 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const StoryController = require('../controllers/storyController');
-const { authenticate, optionalAuth } = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const StoryController = require("../controllers/storyController");
+const { authenticate } = require("../middleware/auth");
+const upload = require("../middleware/upload");
 
-// Create a new story
-router.post('/', authenticate, upload.single('media'), StoryController.createStory);
-
-// Get active stories for a user
-router.get('/:userId', optionalAuth, StoryController.getUserStories);
-
-// Increment story view count
-router.post('/:storyId/views', optionalAuth, StoryController.incrementStoryViews);
+// Story routes
+router.post(
+  "/",
+  authenticate,
+  upload.single("media"),
+  StoryController.createStory
+);
+router.get("/", authenticate, StoryController.getStories);
+router.get("/:storyId/view", authenticate, StoryController.viewStory);
+router.delete("/:storyId", authenticate, StoryController.deleteStory);
 
 module.exports = router;

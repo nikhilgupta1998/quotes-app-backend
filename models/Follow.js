@@ -1,4 +1,3 @@
-// models/Follow.js
 module.exports = (sequelize, DataTypes) => {
   const Follow = sequelize.define(
     "Follow",
@@ -30,6 +29,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      tableName: "follows",
       indexes: [
         { unique: true, fields: ["followerId", "followingId"] },
         { fields: ["followerId"] },

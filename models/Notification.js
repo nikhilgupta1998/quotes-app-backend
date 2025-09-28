@@ -38,6 +38,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: true,
     },
+  }, {
+    tableName: "notifications",
   });
 
   Notification.associate = (models) => {

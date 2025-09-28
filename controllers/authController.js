@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { Op } = require("sequelize");
 const { User } = require("../models");
 const { sendEmail } = require("../utils/email");
 // const { sendSMS } = require("../utils/sms");
@@ -10,10 +11,11 @@ class AuthController {
   static async register(req, res) {
     try {
       const { error } = validateRegistration(req.body);
+
       if (error) {
         return res.status(400).json({
           success: false,
-          message: error.details[0].message,
+          message: error?.details[0]?.message,
         });
       }
 
@@ -23,10 +25,10 @@ class AuthController {
       // Check if user already exists
       const existingUser = await User.findOne({
         where: {
-          $or: [
+          [Op.or]: [
             { username },
             ...(email ? [{ email }] : []),
-            ...(mobile ? [{ mobile }] : []),
+            // ...(mobile ? [{ mobile }] : []),
           ],
         },
       });
@@ -42,16 +44,16 @@ class AuthController {
       const user = await User.create({
         username,
         email,
-        mobile,
+        // mobile,
         password,
         firstName,
         lastName,
       });
 
       // Send verification
-      if (email) {
-        await AuthController.sendEmailVerification(user);
-      }
+      // if (email) {
+      //   await AuthController.sendEmailVerification(user);
+      // }
       // if (mobile) {
       //   await AuthController.sendMobileVerification(user);
       // }
@@ -97,7 +99,7 @@ class AuthController {
       // Find user by email, mobile, or username
       const user = await User.findOne({
         where: {
-          $or: [
+          [Op.or]: [
             { email: identifier },
             { mobile: identifier },
             { username: identifier },

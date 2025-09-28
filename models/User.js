@@ -148,6 +148,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      tableName: "users",
       hooks: {
         beforeSave: async (user) => {
           if (user.changed("password")) {

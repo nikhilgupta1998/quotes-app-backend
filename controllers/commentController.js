@@ -1,21 +1,28 @@
-const { Post, Comment } = require("../models");
+const { Comment, User, Post } = require("../models");
+const { validateComment } = require("../utils/validation");
 
-const CommentController = {
-  // Create a comment on a post
-  createComment: async (req, res) => {
+class CommentController {
+  // Create comment
+  static async createComment(req, res) {
     try {
       const { postId } = req.params;
-      const { content } = req.body;
-      const currentUser = req.user;
+      const { error } = validateComment(req.body);
 
-      if (!content) {
+      if (error) {
         return res.status(400).json({
           success: false,
-          message: "Comment content is required",
+          message: error.details[0].message,
         });
       }
 
-      const post = await Post.findByPk(postId);
+      const { content, parentId } = req.body;
+      const currentUser = req.user;
+
+      // Check if post exists
+      const post = await Post.findOne({
+        where: { id: postId, isActive: true },
+      });
+
       if (!post) {
         return res.status(404).json({
           success: false,
@@ -23,84 +30,213 @@ const CommentController = {
         });
       }
 
+      // If it's a reply, check if parent comment exists
+      if (parentId) {
+        const parentComment = await Comment.findOne({
+          where: { id: parentId, postId, isActive: true },
+        });
+
+        if (!parentComment) {
+          return res.status(404).json({
+            success: false,
+            message: "Parent comment not found",
+          });
+        }
+      }
+
       const comment = await Comment.create({
-        postId,
         userId: currentUser.id,
+        postId,
+        parentId,
         content,
+      });
+
+      // Increment comments count
+      await post.increment("commentsCount");
+
+      // If it's a reply, increment replies count of parent
+      if (parentId) {
+        const parentComment = await Comment.findByPk(parentId);
+        await parentComment.increment("repliesCount");
+      }
+
+      // Fetch created comment with user data
+      const createdComment = await Comment.findByPk(comment.id, {
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: [
+              "id",
+              "username",
+              "firstName",
+              "lastName",
+              "profilePicture",
+            ],
+          },
+        ],
       });
 
       res.status(201).json({
         success: true,
         message: "Comment created successfully",
-        data: { comment },
+        data: { comment: createdComment },
       });
     } catch (error) {
-      console.error("Create comment error:", error);
+      console.error("Delete notification error:", error);
       res.status(500).json({
         success: false,
         message: "Internal server error",
       });
     }
-  },
-  // Get comments for a post
-  getComments: async (req, res) => {
+  }
+
+  // Get post comments
+  static async getPostComments(req, res) {
     try {
       const { postId } = req.params;
       const { page = 1, limit = 10 } = req.query;
       const offset = (page - 1) * limit;
-      const post = await Post.findByPk(postId);
-      if (!post) {
-        return res.status(404).json({
-          success: false,
-          message: "Post not found",
-        });
-      }
 
-      const comments = await Comment.findAll({
-        where: { postId },
-        limit,
+      const comments = await Comment.findAndCountAll({
+        where: {
+          postId,
+          parentId: null,
+          isActive: true,
+        },
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: [
+              "id",
+              "username",
+              "firstName",
+              "lastName",
+              "profilePicture",
+            ],
+          },
+          {
+            model: Comment,
+            as: "replies",
+            where: { isActive: true },
+            required: false,
+            include: [
+              {
+                model: User,
+                as: "user",
+                attributes: [
+                  "id",
+                  "username",
+                  "firstName",
+                  "lastName",
+                  "profilePicture",
+                ],
+              },
+            ],
+          },
+        ],
+        limit: parseInt(limit),
         offset,
-        order: [["createdAt", "DESC"]],
+        order: [["createdAt", "ASC"]],
       });
 
-      res.status(200).json({
+      res.json({
         success: true,
         data: {
-          comments,
+          comments: comments.rows,
           pagination: {
-            page,
-            limit,
+            total: comments.count,
+            page: parseInt(page),
+            pages: Math.ceil(comments.count / limit),
           },
         },
       });
     } catch (error) {
-      console.error("Get comments error:", error);
+      console.error("Get post comments error:", error);
       res.status(500).json({
         success: false,
         message: "Internal server error",
       });
     }
-  },
-  // Delete a comment
-  deleteComment: async (req, res) => {
+  }
+
+  // Update comment
+  static async updateComment(req, res) {
     try {
       const { commentId } = req.params;
+      const { content } = req.body;
       const currentUser = req.user;
-      const comment = await Comment.findByPk(commentId);
+
+      const comment = await Comment.findOne({
+        where: {
+          id: commentId,
+          userId: currentUser.id,
+          isActive: true,
+        },
+      });
+
       if (!comment) {
         return res.status(404).json({
           success: false,
-          message: "Comment not found",
+          message: "Comment not found or you do not have permission to edit it",
         });
       }
-      if (comment.userId !== currentUser.id) {
-        return res.status(403).json({
+
+      await comment.update({ content });
+
+      res.json({
+        success: true,
+        message: "Comment updated successfully",
+      });
+    } catch (error) {
+      console.error("Update comment error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
+
+  // Delete comment
+  static async deleteComment(req, res) {
+    try {
+      const { commentId } = req.params;
+      const currentUser = req.user;
+
+      const comment = await Comment.findOne({
+        where: {
+          id: commentId,
+          userId: currentUser.id,
+          isActive: true,
+        },
+      });
+
+      if (!comment) {
+        return res.status(404).json({
           success: false,
-          message: "You are not authorized to delete this comment",
+          message:
+            "Comment not found or you do not have permission to delete it",
         });
       }
-      await comment.destroy();
-      res.status(200).json({
+
+      await comment.update({ isActive: false });
+
+      // Decrement comments count
+      const post = await Post.findByPk(comment.postId);
+      if (post) {
+        await post.decrement("commentsCount");
+      }
+
+      // If it's a reply, decrement parent's replies count
+      if (comment.parentId) {
+        const parentComment = await Comment.findByPk(comment.parentId);
+        if (parentComment) {
+          await parentComment.decrement("repliesCount");
+        }
+      }
+
+      res.json({
         success: true,
         message: "Comment deleted successfully",
       });
@@ -111,47 +247,73 @@ const CommentController = {
         message: "Internal server error",
       });
     }
-  },
-  // Update a comment
-  updateComment: async (req, res) => {
+  }
+
+  // Like comment (placeholder - would need Like model update to support comments)
+  static async likeComment(req, res) {
     try {
       const { commentId } = req.params;
-      const { content } = req.body;
       const currentUser = req.user;
-      if (!content) {
-        return res.status(400).json({
-          success: false,
-          message: "Comment content is required",
-        });
-      }
-      const comment = await Comment.findByPk(commentId);
+
+      const comment = await Comment.findOne({
+        where: { id: commentId, isActive: true },
+      });
+
       if (!comment) {
         return res.status(404).json({
           success: false,
           message: "Comment not found",
         });
       }
-      if (comment.userId !== currentUser.id) {
-        return res.status(403).json({
-          success: false,
-          message: "You are not authorized to update this comment",
-        });
-      }
-      comment.content = content;
-      await comment.save();
-      res.status(200).json({
+
+      // Implementation would require extending Like model to support comments
+      // For now, just increment the likes count
+      await comment.increment("likesCount");
+
+      res.json({
         success: true,
-        message: "Comment updated successfully",
-        data: { comment },
+        message: "Comment liked successfully",
       });
     } catch (error) {
-      console.error("Update comment error:", error);
+      console.error("Like comment error:", error);
       res.status(500).json({
         success: false,
         message: "Internal server error",
       });
     }
-  },
-};
+  }
+
+  // Unlike comment
+  static async unlikeComment(req, res) {
+    try {
+      const { commentId } = req.params;
+      const currentUser = req.user;
+
+      const comment = await Comment.findOne({
+        where: { id: commentId, isActive: true },
+      });
+
+      if (!comment) {
+        return res.status(404).json({
+          success: false,
+          message: "Comment not found",
+        });
+      }
+
+      await comment.decrement("likesCount");
+
+      res.json({
+        success: true,
+        message: "Comment unliked successfully",
+      });
+    } catch (error) {
+      console.error("Unlike comment error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
+}
 
 module.exports = CommentController;

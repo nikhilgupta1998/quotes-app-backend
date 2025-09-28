@@ -1,4 +1,3 @@
-// models/Story.js
 module.exports = (sequelize, DataTypes) => {
   const Story = sequelize.define(
     "Story",
@@ -42,6 +41,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      tableName: "stories",
       indexes: [
         { fields: ["userId"] },
         { fields: ["expiresAt"] },

@@ -3,24 +3,14 @@ const Joi = require("joi");
 const validateRegistration = (data) => {
   const schema = Joi.object({
     username: Joi.string().alphanum().min(3).max(30).required(),
-    email: Joi.string().email().when("mobile", {
-      is: Joi.exist(),
-      then: Joi.optional(),
-      otherwise: Joi.required(),
-    }),
-    mobile: Joi.string()
-      .pattern(/^[\+]?[1-9][\d]{0,15}$/)
-      .when("email", {
-        is: Joi.exist(),
-        then: Joi.optional(),
-        otherwise: Joi.required(),
-      }),
+    email: Joi.string().email(),
+    mobile: Joi.string().pattern(/^[\+]?[1-9][\d]{0,15}$/),
     password: Joi.string().min(6).max(100).required(),
     firstName: Joi.string().min(1).max(50).required(),
     lastName: Joi.string().min(1).max(50).required(),
   }).xor("email", "mobile"); // Either email or mobile must be provided, but not both
 
-  return schema.validate(data);
+  return schema.validate(data, { abortEarly: false });
 };
 
 const validateLogin = (data) => {
