@@ -786,6 +786,8 @@ const startServer = async () => {
       console.log("");
     });
 
+    
+
     // Log active users count every minute (development only)
     if (process.env.NODE_ENV === "development") {
       setInterval(() => {
