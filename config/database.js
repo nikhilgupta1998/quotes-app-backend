@@ -7,8 +7,14 @@ module.exports = {
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    dialect: "mysql",
+    dialect: "postgres",
     logging: console.log,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false, // important for Render
+      },
+    },
     pool: {
       max: 10,
       min: 0,
@@ -27,7 +33,7 @@ module.exports = {
     database: process.env.DB_NAME + "_test",
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    dialect: "mysql",
+    dialect: "postgres",
     logging: false,
   },
   production: {
@@ -36,7 +42,7 @@ module.exports = {
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    dialect: "mysql",
+    dialect: "postgres",
     logging: false,
     pool: {
       max: 20,

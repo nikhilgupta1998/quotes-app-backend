@@ -11,7 +11,7 @@ router.get('/conversations/:conversationId', authenticate, MessageController.get
 
 // Message routes
 router.post('/conversations/:conversationId/messages', authenticate, upload.single('media'), MessageController.sendMessage);
-router.put('/messages/:messageId/read', authenticate, MessageController.markAsRead);
-router.delete('/messages/:messageId', authenticate, MessageController.deleteMessage);
+router.put('/:messageId/read', authenticate, MessageController.markAsRead);
+router.delete('/:messageId', authenticate, MessageController.deleteMessage);
 
 module.exports = router;

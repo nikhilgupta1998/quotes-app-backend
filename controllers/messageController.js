@@ -8,7 +8,7 @@ class MessageController {
     try {
       const currentUser = req.user;
       const { page = 1, limit = 20 } = req.query;
-      const offset = (page - 1) * limit;
+      const offset = (page - 1) * limit; 
 
       const conversations = await Conversation.findAndCountAll({
         where: {
