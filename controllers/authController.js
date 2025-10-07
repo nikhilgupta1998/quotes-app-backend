@@ -51,9 +51,9 @@ class AuthController {
       });
 
       // Send verification
-      // if (email) {
-      //   await AuthController.sendEmailVerification(user);
-      // }
+      if (email) {
+        await AuthController.sendEmailVerification(user);
+      }
       // if (mobile) {
       //   await AuthController.sendMobileVerification(user);
       // }

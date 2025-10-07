@@ -9,12 +9,12 @@ module.exports = {
     port: process.env.DB_PORT,
     dialect: "postgres",
     logging: console.log,
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false, // important for Render
-      },
-    },
+    // dialectOptions: {
+    //   ssl: {
+    //     require: true,
+    //     rejectUnauthorized: false, // important for Render
+    //   },
+    // },
     pool: {
       max: 10,
       min: 0,

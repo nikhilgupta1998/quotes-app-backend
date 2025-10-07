@@ -8,12 +8,15 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
   },
+  tls: {
+    rejectUnauthorized: false, // optional: true in prod if you verify certs
+  },
 });
 
 const sendEmail = async (options) => {
   try {
     const mailOptions = {
-      from: `"Social Media App" <${process.env.EMAIL_USER}>`,
+      from: `"Social Media App" <${process.env.SENDER_EMAIL}>`,
       to: options.to,
       subject: options.subject,
       html: options.html,
