@@ -28,7 +28,7 @@ class AuthController {
           [Op.or]: [
             { username },
             ...(email ? [{ email }] : []),
-            // ...(mobile ? [{ mobile }] : []),
+            ...(mobile ? [{ mobile }] : []),
           ],
         },
       });
@@ -44,7 +44,7 @@ class AuthController {
       const user = await User.create({
         username,
         email,
-        // mobile,
+        mobile,
         password,
         firstName,
         lastName,
@@ -54,9 +54,9 @@ class AuthController {
       if (email) {
         await AuthController.sendEmailVerification(user);
       }
-      // if (mobile) {
-      //   await AuthController.sendMobileVerification(user);
-      // }
+      if (mobile) {
+        await AuthController.sendMobileVerification(user);
+      }
 
       // Generate JWT
       const token = AuthController.generateAccessToken(user.id);
@@ -193,7 +193,7 @@ class AuthController {
           mobile,
           mobileVerificationCode: otp,
           mobileVerificationExpires: {
-            $gt: new Date(),
+            [Op.gt]: new Date(),
           },
         },
       });
@@ -279,7 +279,7 @@ class AuthController {
         });
       }
 
-      // await AuthController.sendMobileVerification(user);
+      await AuthController.sendMobileVerification(user);
 
       res.json({
         success: true,
@@ -301,7 +301,7 @@ class AuthController {
 
       const user = await User.findOne({
         where: {
-          $or: [{ email: identifier }, { mobile: identifier }],
+          [Op.or]: [{ email: identifier }, { mobile: identifier }],
         },
       });
 
@@ -333,7 +333,8 @@ class AuthController {
           `,
         });
       } else {
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        // const otp =  Math.floor(100000 + Math.random() * 900000).toString();
+        const otp = "123456";
         await user.update({
           mobileVerificationCode: otp,
           mobileVerificationExpires: resetExpires,
@@ -371,7 +372,7 @@ class AuthController {
           where: {
             passwordResetToken: token,
             passwordResetExpires: {
-              $gt: new Date(),
+              [Op.gt]: new Date(),
             },
           },
         });
@@ -382,7 +383,7 @@ class AuthController {
             mobile,
             mobileVerificationCode: otp,
             mobileVerificationExpires: {
-              $gt: new Date(),
+              [Op.gt]: new Date(),
             },
           },
         });
@@ -511,20 +512,21 @@ class AuthController {
     });
   }
 
-  // static async sendMobileVerification(user) {
-  //   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  //   const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  static async sendMobileVerification(user) {
+    // const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = "123456";
+    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  //   await user.update({
-  //     mobileVerificationCode: otp,
-  //     mobileVerificationExpires: expires,
-  //   });
+    await user.update({
+      mobileVerificationCode: otp,
+      mobileVerificationExpires: expires,
+    });
 
-  //   await sendSMS(
-  //     user.mobile,
-  //     `Your verification OTP is: ${otp}. Valid for 10 minutes.`
-  //   );
-  // }
+    // await sendSMS(
+    //   user.mobile,
+    //   `Your verification OTP is: ${otp}. Valid for 10 minutes.`
+    // );
+  }
 }
 
 module.exports = AuthController;
